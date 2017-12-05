@@ -243,21 +243,24 @@ namespace ImageQuantization
 
             return Filtered;
         }
-        public static int shift(ref int[] initialseed, int pos)
+        public static int shift(ref int initialseed, int len, int pos)
         {
-            int fri, sec;
+            int start, sec, end, l;
             int[] xor = new int[8];
             for (int i = 0; i < 8; i++)
             {
-                fri = initialseed[0];
-                sec = initialseed[initialseed.Length - 1 - pos];
-                for (int j = 0; j < initialseed.Length - 1; j++)
-                {
-                    initialseed[j] = initialseed[j + 1];
+                start = (initialseed & (1 << (len - 1)));
+                start = (start >> (len - 1));
+                sec = (initialseed & (1 << pos));
+                sec = (sec >> (pos));
 
-                }
-                initialseed[initialseed.Length - 1] = fri ^ sec;
-                xor[i] = initialseed[initialseed.Length - 1];
+                end = (start ^ sec);
+
+                initialseed = (initialseed << 1);
+                initialseed = (initialseed | end);
+                xor[i] = end;
+                l = (1 << len) - 1;
+                initialseed = (initialseed & l);
             }
             int sum = 0;
             for (int i = 0; i < 8; i++)
@@ -270,27 +273,29 @@ namespace ImageQuantization
 
             }
             return sum;
-            ////////////////////////////////////////////////////////
+
 
         }
-        public static RGBPixel[,] incrept(RGBPixel[,] ImageMatrix, ref int[] initialseed, int pos)
-        {   int xor=0;
+        public static RGBPixel[,] incrept(RGBPixel[,] ImageMatrix, ref int initialseed, int len, int pos)
+        {
+            int xor = 0;
             int Height = GetHeight(ImageMatrix);
             int Width = GetWidth(ImageMatrix);
 
             RGBPixel[,] filter = new RGBPixel[Height, Width];
-             //===================================
+            //===================================
             for (int i = 0; i < Height; i++)
             {
                 for (int j = 0; j < Width; j++)
-                { xor=shift(ref initialseed,pos);
-                filter[i, j].red = (byte)(ImageMatrix[i, j].red ^ xor);
+                {
+                    xor = shift(ref initialseed, len, pos);
+                    filter[i, j].red = (byte)(ImageMatrix[i, j].red ^ xor);
 
-                xor = shift(ref initialseed, pos);
-                filter[i, j].green = (byte)(ImageMatrix[i, j].green ^ xor);
+                    xor = shift(ref initialseed, len, pos);
+                    filter[i, j].green = (byte)(ImageMatrix[i, j].green ^ xor);
 
-                xor = shift(ref initialseed, pos);
-                filter[i, j].blue= (byte)(ImageMatrix[i, j].blue ^ xor);
+                    xor = shift(ref initialseed, len, pos);
+                    filter[i, j].blue = (byte)(ImageMatrix[i, j].blue ^ xor);
                 }
             }
             return filter;
