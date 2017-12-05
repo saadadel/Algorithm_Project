@@ -35,13 +35,9 @@ namespace ImageQuantization
         {
             string initialsed = initialseed.Text;
             int pos = int.Parse(tapText.Text);
-            
-            int[] seed = new int[initialsed.Length];
-            for (int i = 0; i < initialsed.Length; i++)
-            {
-                seed[i] = (int)initialsed[i] - 48;
-            }
-             ImageMatrix = ImageOperations.incrept(ImageMatrix, ref seed,pos);
+            int x = Convert.ToInt32(initialsed, 2);
+            int len = initialsed.Length;
+             ImageMatrix = ImageOperations.incrept(ImageMatrix, ref x, len, pos);
              huffman h = new huffman(ImageMatrix);
              Dictionary<byte, string> red = h.getRedCode();
              Dictionary<byte, string> blue = h.getBlueCode();
