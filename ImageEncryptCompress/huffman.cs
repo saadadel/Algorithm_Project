@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,35 +8,38 @@ namespace ImageQuantization
 {
     public class huffman
     {
-        private minHeap redFrequency;
+        private minHeap redHeap;
+        Dictionary<byte, int> redFrequencies;
         private Dictionary<byte, string> redCode;
 
-        private minHeap blueFrequency;
+        private minHeap blueHeap;
         private Dictionary<byte, string> blueCode;
+        Dictionary<byte, int> blueFrequencies;
 
-        private minHeap greenFrequency;
+        private minHeap greenHeap;
         private Dictionary<byte, string> greenCode;
+        Dictionary<byte, int> greenFrequencies;
 
-        private void computeFrequencies(RGBPixel[,] arr, ref Dictionary<byte, int> temp1, ref Dictionary<byte, int> temp2, ref Dictionary<byte, int> temp3)
+        private void computeFrequencies(RGBPixel[,] arr)
         {
             for (int i = 0; i < arr.GetLength(0); i++)
             {
                 for (int j = 0; j < arr.GetLength(1); j++)
                 {
-                    if (temp1.ContainsKey(arr[i, j].red))
-                        temp1[arr[i, j].red]++;
+                    if (redFrequencies.ContainsKey(arr[i, j].red))
+                        redFrequencies[arr[i, j].red]++;
                     else
-                        temp1.Add(arr[i, j].red, 1);
+                        redFrequencies.Add(arr[i, j].red, 1);
 
-                    if (temp2.ContainsKey(arr[i, j].blue))
-                        temp2[arr[i, j].blue]++;
+                    if (blueFrequencies.ContainsKey(arr[i, j].blue))
+                        blueFrequencies[arr[i, j].blue]++;
                     else
-                        temp2.Add(arr[i, j].blue, 1);
+                        blueFrequencies.Add(arr[i, j].blue, 1);
 
-                    if (temp3.ContainsKey(arr[i, j].green))
-                        temp3[arr[i, j].green]++;
+                    if (greenFrequencies.ContainsKey(arr[i, j].green))
+                        greenFrequencies[arr[i, j].green]++;
                     else
-                        temp3.Add(arr[i, j].green, 1);
+                        greenFrequencies.Add(arr[i, j].green, 1);
                 }
             }
         }
@@ -63,40 +66,38 @@ namespace ImageQuantization
         }
         public huffman(RGBPixel[,] arr)
         {
-            Dictionary<byte, int> temp1 = new Dictionary<byte, int>();
-            Dictionary<byte, int> temp2 = new Dictionary<byte, int>();
-            Dictionary<byte, int> temp3 = new Dictionary<byte, int>();
-            computeFrequencies(arr, ref temp1, ref temp2, ref temp3);
-
-
-            redFrequency = new minHeap();
-            blueFrequency = new minHeap();
-            greenFrequency = new minHeap();
-            foreach (var item in temp1)
+            redFrequencies = new Dictionary<byte, int>();
+            greenFrequencies = new Dictionary<byte, int>();
+            blueFrequencies = new Dictionary<byte, int>();
+            computeFrequencies(arr);
+            redHeap = new minHeap();
+            blueHeap = new minHeap();
+            greenHeap = new minHeap();
+            foreach (var item in redFrequencies)
             {
                 node newNode = new node(item.Key, item.Value);
-                redFrequency.add(newNode);
+                redHeap.add(newNode);
             }
-            foreach (var item in temp2)
+            foreach (var item in blueFrequencies)
             {
                 node newNode = new node(item.Key, item.Value);
-                blueFrequency.add(newNode);
+                blueHeap.add(newNode);
             }
-            foreach (var item in temp3)
+            foreach (var item in greenFrequencies)
             {
                 node newNode = new node(item.Key, item.Value);
-                greenFrequency.add(newNode);
+                greenHeap.add(newNode);
             }
-            buildTree(ref redFrequency);
-            buildTree(ref blueFrequency);
-            buildTree(ref greenFrequency);
+            buildTree(ref redHeap);
+            buildTree(ref blueHeap);
+            buildTree(ref greenHeap);
 
             redCode = new Dictionary<byte, string>();
             blueCode = new Dictionary<byte, string>();
             greenCode = new Dictionary<byte, string>();
-            getBinaryCode(redFrequency.getRoot(), "", ref redCode);
-            getBinaryCode(blueFrequency.getRoot(), "", ref blueCode);
-            getBinaryCode(greenFrequency.getRoot(), "", ref greenCode);
+            getBinaryCode(redHeap.getRoot(), "", ref redCode);
+            getBinaryCode(blueHeap.getRoot(), "", ref blueCode);
+            getBinaryCode(greenHeap.getRoot(), "", ref greenCode);
         }
 
         public Dictionary<byte, string> getRedCode()
@@ -110,6 +111,40 @@ namespace ImageQuantization
         public Dictionary<byte, string> getGreenCode()
         {
             return greenCode;
+        }
+        public void writeToFile(string path)
+        {
+            string s = string.Format("red code:{0}", Environment.NewLine);
+            foreach (var item in redCode)
+            {
+                s += string.Format("{0}:{1} {2}",item.Key,item.Value,Environment.NewLine);
+            }
+            s += string.Format("green code:{0}", Environment.NewLine);
+            foreach (var item in greenCode)
+            {
+                s += string.Format("{0}:{1} {2}", item.Key, item.Value, Environment.NewLine);
+            }
+            s += string.Format("blue code:{0}", Environment.NewLine);
+            foreach (var item in blueCode)
+            {
+                s += string.Format("{0}:{1} {2}", item.Key, item.Value, Environment.NewLine);
+            }
+            s += string.Format("red frequencies:{0}", Environment.NewLine);
+            foreach (var item in redFrequencies)
+            {
+                s += string.Format("{0}:{1} {2}", item.Key, item.Value, Environment.NewLine);
+            }
+            s += string.Format("green frequencies:{0}", Environment.NewLine);
+            foreach (var item in greenFrequencies)
+            {
+                s += string.Format("{0}:{1} {2}", item.Key, item.Value, Environment.NewLine);
+            }
+            s +=string.Format( "blue frequencies:{0}",Environment.NewLine);
+            foreach (var item in blueFrequencies)
+            {
+                s += string.Format("{0}:{1} {2}", item.Key, item.Value, Environment.NewLine);
+            }
+            System.IO.File.WriteAllText(path,s);
         }
     }
     class node
