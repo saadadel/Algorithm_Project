@@ -50,7 +50,7 @@ namespace ImageQuantization
             {
                 temp1 = temp.extractMin();
                 temp2 = temp.extractMin();
-                newNode = new node(0, temp1.frequency + temp2.frequency, temp1, temp2);
+                newNode = new node(0, temp1.frequency + temp2.frequency, temp2, temp1);
                 temp.add(newNode);
             }
         }
@@ -61,8 +61,8 @@ namespace ImageQuantization
                 temp.Add(x.value, y);
                 return;
             }
-            getBinaryCode(x.left, y + "1", ref temp);
-            getBinaryCode(x.right, y + "0", ref temp);
+            getBinaryCode(x.left, y + "0", ref temp);
+            getBinaryCode(x.right, y + "1", ref temp);
         }
         public huffman(RGBPixel[,] arr)
         {
@@ -75,6 +75,7 @@ namespace ImageQuantization
             greenHeap = new minHeap();
             foreach (var item in redFrequencies)
             {
+                
                 node newNode = new node(item.Key, item.Value);
                 redHeap.add(newNode);
             }
@@ -91,7 +92,7 @@ namespace ImageQuantization
             buildTree(ref redHeap);
             buildTree(ref blueHeap);
             buildTree(ref greenHeap);
-
+            
             redCode = new Dictionary<byte, string>();
             blueCode = new Dictionary<byte, string>();
             greenCode = new Dictionary<byte, string>();
@@ -112,42 +113,36 @@ namespace ImageQuantization
         {
             return greenCode;
         }
-        public void writeToFile(string path)
+        public void writeToFile(string path,ref RGBPixel[,]arr)
         {
-            string s = string.Format("red code:{0}", Environment.NewLine);
+            string s = string.Format("red:{0}", Environment.NewLine);
+            double original =((arr.GetLength(0)*arr.GetLength(1))*3);
+            int compressed = 0;
             foreach (var item in redCode)
             {
-                s += string.Format("{0}:{1} {2}",item.Key,item.Value,Environment.NewLine);
+                compressed += (redFrequencies[item.Key] * item.Value.Length);
+                s += string.Format("{0,3}:    {1},    {2},    {3}{4}", item.Key, item.Value, redFrequencies[item.Key],(redFrequencies[item.Key]*item.Value.Length), Environment.NewLine);
             }
-            s += string.Format("green code:{0}", Environment.NewLine);
+            s += string.Format("green:{0}", Environment.NewLine);
             foreach (var item in greenCode)
             {
-                s += string.Format("{0}:{1} {2}", item.Key, item.Value, Environment.NewLine);
-            }
-            s += string.Format("blue code:{0}", Environment.NewLine);
+                compressed += (greenFrequencies[item.Key] * item.Value.Length);
+                s += string.Format("{0,3}:    {1},    {2},    {3}{4}", item.Key, item.Value, greenFrequencies[item.Key], (greenFrequencies[item.Key] * item.Value.Length), Environment.NewLine);
+            } 
+            s += string.Format("blue:{0}", Environment.NewLine);
             foreach (var item in blueCode)
             {
-                s += string.Format("{0}:{1} {2}", item.Key, item.Value, Environment.NewLine);
+                compressed += (blueFrequencies[item.Key] * item.Value.Length);
+                s += string.Format("{0,3}:    {1},    {2},    {3}{4}", item.Key, item.Value, blueFrequencies[item.Key], (blueFrequencies[item.Key] * item.Value.Length), Environment.NewLine);
             }
-            s += string.Format("red frequencies:{0}", Environment.NewLine);
-            foreach (var item in redFrequencies)
-            {
-                s += string.Format("{0}:{1} {2}", item.Key, item.Value, Environment.NewLine);
-            }
-            s += string.Format("green frequencies:{0}", Environment.NewLine);
-            foreach (var item in greenFrequencies)
-            {
-                s += string.Format("{0}:{1} {2}", item.Key, item.Value, Environment.NewLine);
-            }
-            s +=string.Format( "blue frequencies:{0}",Environment.NewLine);
-            foreach (var item in blueFrequencies)
-            {
-                s += string.Format("{0}:{1} {2}", item.Key, item.Value, Environment.NewLine);
-            }
+            compressed /= 8;
+            original = (compressed / original)*100;
+            s += string.Format("total bytes: {0}{1}", compressed,Environment.NewLine);
+            s += string.Format("compression ratio: {0}% {1}", original,Environment.NewLine);
             System.IO.File.WriteAllText(path,s);
         }
     }
-    class node
+    public class node
     {
         public byte value;
         public int frequency;
@@ -162,79 +157,99 @@ namespace ImageQuantization
             this.right = right;
         }
     }
-    class minHeap
+    public class minHeap
     {
-        private List<node> arr;
+        private List<node> elements = new List<node>();
 
-        public minHeap()
+        public int count()
         {
-            this.arr = new List<node>();
+            return elements.Count;
         }
 
-        private void minHeapify(int index)
+        public node getRoot() 
         {
-            int left = (index * 2) + 1;
-            int right = (index * 2) + 2;
-            int smallest = index;
-            int size = arr.Count;
-            if (left < size && arr[left].frequency < arr[index].frequency)
-            {
-                smallest = left;
-            }
-            if (right < size && arr[right].frequency < arr[smallest].frequency)
-            {
-                smallest = right;
-            }
-            if (smallest != index)
-            {
-                node temp = arr[index];
-                arr[index] = arr[smallest];
-                arr[smallest] = temp;
-                minHeapify(smallest);
-            }
+            return elements[0];
+        }
+
+        public void add(node item)
+        {
+            elements.Add(item);
+            this.HeapifyUp(elements.Count - 1);
         }
 
         public node extractMin()
         {
-            int size = arr.Count;
-            if (size == 0)
-                return null;
-            node min = arr[0];
-            if (size == 1)
+            if (elements.Count > 0)
             {
-                arr.RemoveAt(0);
-                return min;
+                node item = elements[0];
+                elements[0] = elements[elements.Count - 1];
+                elements.RemoveAt(elements.Count - 1);
+
+                this.HeapifyDown(0);
+                return item;
             }
-            else
-            {
-                arr[0] = arr[size - 1];
-                arr.RemoveAt(size - 1);
-                minHeapify(0);
-                return min;
-            }
+
+            throw new InvalidOperationException("no element in heap");
         }
 
-        public void add(node k)
+        private void HeapifyUp(int index)
         {
-            arr.Add(k);
-            int index = arr.Count - 1;
-            while (index >= 0 && arr[(index - 1) / 2].frequency > arr[index].frequency)
+            var parent = this.GetParent(index);
+            if (parent >= 0 && elements[index].frequency < elements[parent].frequency)
             {
-                node temp = arr[(index - 1) / 2];
-                arr[(index - 1) / 2] = arr[index];
-                arr[index] = temp;
-                index = (index - 1) / 2;
+                var temp = elements[index];
+                elements[index] = elements[parent];
+                elements[parent] = temp;
+                this.HeapifyUp(parent);
             }
         }
 
-        public int count()
+        private void HeapifyDown(int index)
         {
-            return arr.Count;
+            var smallest = index;
+            var left = this.GetLeft(index);
+            var right = this.GetRight(index);
+
+            if (left < this.count() && elements[left].frequency < elements[index].frequency)
+            {
+                smallest = left;
+            }
+
+            if (right < this.count() && elements[right].frequency < elements[smallest].frequency)
+            {
+                smallest = right;
+            }
+
+            if (smallest != index)
+            {
+                var temp = elements[index];
+                elements[index] = elements[smallest];
+                elements[smallest] = temp;
+
+                this.HeapifyDown(smallest);
+            }
+
         }
 
-        public node getRoot()
+        private int GetParent(int index)
         {
-            return arr[0];
+            if (index <= 0)
+            {
+                return -1;
+            }
+
+            return (index - 1) / 2;
+        }
+
+        private int GetLeft(int index)
+        {
+            return 2 * index + 1;
+        }
+
+        private int GetRight(int index)
+        {
+            return 2 * index + 2;
         }
     }
+   
 }
