@@ -4,6 +4,7 @@ using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
+using System.IO;
 ///Algorithms Project
 ///Intelligent Scissors
 ///
@@ -299,6 +300,140 @@ namespace ImageQuantization
                 }
             }
             return filter;
+        }
+        public static void saveinbinaryfile(Dictionary<byte, string> red, Dictionary<byte, string> green, Dictionary<byte, string> blue, RGBPixel[,] ImageMatrix,string path)
+        {
+
+            int Height = GetHeight(ImageMatrix);
+            int Width = GetWidth(ImageMatrix);
+            byte savebyte = 0;
+            int countstring = 0;
+            int lengthofstring = 0;
+            int countbit = 0;
+            string ff;
+            BinaryWriter br_writer;
+            br_writer = new BinaryWriter(new FileStream(path, FileMode.Append));
+            for (int i = 0; i < Height; i++)
+            {
+                for (int j = 0; j < Width; j++)
+                {
+                    lengthofstring = red[ImageMatrix[i, j].red].Length;
+                    ff = red[ImageMatrix[i, j].red];
+                    while (countbit < 8)
+                    {
+                        savebyte = (byte)(savebyte << 1);
+                        savebyte = (byte)(savebyte | red[ImageMatrix[i, j].red][countstring] - '0');
+                        countstring++;
+                        countbit++;
+                        if (countbit == 8)
+                        {
+                            br_writer.Write(savebyte);
+                            savebyte = 0;
+                            countbit = 0;
+                        }
+                        if (countstring == lengthofstring)
+                        {
+                            countstring = 0;
+                            lengthofstring = 0;
+                            break;
+                        }
+                    }
+
+                }
+            }
+            if (savebyte != 0)
+            {
+                br_writer.Write(savebyte);
+                savebyte = 0;
+            }
+
+            for (int i = 0; i < Height; i++)
+            {
+                for (int j = 0; j < Width; j++)
+                {
+                    lengthofstring = green[ImageMatrix[i, j].green].Length;
+                    ff = green[ImageMatrix[i, j].green];
+                    while (countbit < 8)
+                    {
+                        savebyte = (byte)(savebyte << 1);
+                        savebyte = (byte)(savebyte | green[ImageMatrix[i, j].green][countstring] - '0');
+                        countstring++;
+                        countbit++;
+                        if (countbit == 8)
+                        {
+                            br_writer.Write(savebyte);
+                            savebyte = 0;
+                            countbit = 0;
+                        }
+                        if (countstring == lengthofstring)
+                        {
+                            countstring = 0;
+                            lengthofstring = 0;
+                            break;
+                        }
+                    }
+
+                }
+            }
+            if (savebyte != 0)
+            {
+                br_writer.Write(savebyte);
+                savebyte = 0;
+            }
+
+
+            for (int i = 0; i < Height; i++)
+            {
+                for (int j = 0; j < Width; j++)
+                {
+                    lengthofstring = blue[ImageMatrix[i, j].blue].Length;
+                    ff = blue[ImageMatrix[i, j].blue];
+                    while (countbit < 8)
+                    {
+                        savebyte = (byte)(savebyte << 1);
+                        savebyte = (byte)(savebyte | blue[ImageMatrix[i, j].blue][countstring] - '0');
+                        countstring++;
+                        countbit++;
+                        if (countbit == 8)
+                        {
+                            br_writer.Write(savebyte);
+                            savebyte = 0;
+                            countbit = 0;
+                        }
+                        if (countstring == lengthofstring)
+                        {
+                            countstring = 0;
+                            lengthofstring = 0;
+                            break;
+                        }
+                    }
+
+                }
+            }
+            if (savebyte != 0)
+            {
+                br_writer.Write(savebyte);
+                savebyte = 0;
+            }
+            br_writer.Close();
+        }
+        public static void getdic(ref Dictionary<string, byte> dec, string s, ref int index, string code)
+        {
+            if (index == s.Length)
+            {
+                return;
+            }
+            if (s[index] == '1')
+            {
+                byte b = Convert.ToByte(s.Substring(index + 1, 8), 2);
+                index += 8;
+                dec.Add(code, b);
+                return;
+            }
+            index += 1;
+            getdic(ref dec, s, ref index, code + "0");
+            index += 1;
+            getdic(ref dec, s, ref index, code + "1");
         }
 
     }
