@@ -9,27 +9,31 @@ namespace ImageQuantization
     public class huffman
     {
         private minHeap redHeap;
-        Dictionary<byte, int> redFrequencies;
         private Dictionary<byte, string> redCode;
+        private int[] redFrequencies;
+        private string redTree;
 
         private minHeap blueHeap;
         private Dictionary<byte, string> blueCode;
-        Dictionary<byte, int> blueFrequencies;
+        private int[] blueFrequencies;
+        private string blueTree;
 
         private minHeap greenHeap;
         private Dictionary<byte, string> greenCode;
-        Dictionary<byte, int> greenFrequencies;
-        
+        private int[] greenFrequencies;
+        private string greenTree;
 
-        private void getBinaryCode(node x, string y, ref Dictionary<byte, string> temp)
+        private void getBinaryCode(node x, string y, ref Dictionary<byte, string> byteCode,ref string stringTree)
         {
             if (x.left == null && x.right == null)
             {
-                temp.Add(x.value, y);
+                byteCode.Add(x.value, y);
+                stringTree += "1" + Convert.ToString(x.value, 2).PadLeft(8, '0');
                 return;
             }
-            getBinaryCode(x.left, y + "0", ref temp);
-            getBinaryCode(x.right, y + "1", ref temp);
+            stringTree += "0";
+            getBinaryCode(x.left, y + "0", ref byteCode,ref stringTree);
+            getBinaryCode(x.right, y + "1", ref byteCode,ref stringTree);
         }
 
 
@@ -52,20 +56,9 @@ namespace ImageQuantization
             {
                 for (int j = 0; j < arr.GetLength(1); j++)   
                 {
-                    if (redFrequencies.ContainsKey(arr[i, j].red))   
-                        redFrequencies[arr[i, j].red]++;
-                    else
-                        redFrequencies.Add(arr[i, j].red, 1);
-
-                    if (blueFrequencies.ContainsKey(arr[i, j].blue)) 
-                        blueFrequencies[arr[i, j].blue]++;
-                    else
-                        blueFrequencies.Add(arr[i, j].blue, 1);
-
-                    if (greenFrequencies.ContainsKey(arr[i, j].green)) 
-                        greenFrequencies[arr[i, j].green]++;
-                    else
-                        greenFrequencies.Add(arr[i, j].green, 1);
+                    redFrequencies[arr[i, j].red]++;
+                    blueFrequencies[arr[i, j].blue]++;
+                    greenFrequencies[arr[i, j].green]++;
                 }
             }
         }
@@ -76,53 +69,129 @@ namespace ImageQuantization
             redHeap = new minHeap();
             blueHeap = new minHeap();
             greenHeap = new minHeap();
-            redCode = new Dictionary<byte, string>();
-            blueCode = new Dictionary<byte, string>();
-            greenCode = new Dictionary<byte, string>();
-            redFrequencies = new Dictionary<byte, int>();
-            greenFrequencies = new Dictionary<byte, int>();
-            blueFrequencies = new Dictionary<byte, int>();
+            redCode = new Dictionary<byte, string>(256);
+            blueCode = new Dictionary<byte, string>(256);
+            greenCode = new Dictionary<byte, string>(256);
+            redFrequencies = new int[256];
+            greenFrequencies = new int[256];
+            blueFrequencies = new int[256];
+            redTree = "";
+            blueTree = "";
+            greenTree = "";
             computeFrequencies(arr); 
-                }
+        }
 
           public Dictionary<byte, string> getRedCode()
         {
-              foreach (var item in redFrequencies)    
-             {  
-                node newNode = new node(item.Key, item.Value);
-                redHeap.add(newNode);
+            for (int i = 0; i < 256;i++)
+            {
+                if (redFrequencies[i] != 0)
+                {
+                    node newNode = new node((byte)i, redFrequencies[i]);
+                    redHeap.add(newNode);
+                }
             }
             buildTree(ref redHeap); 
-            getBinaryCode(redHeap.getRoot(), "", ref redCode); 
+            getBinaryCode(redHeap.getRoot(), "", ref redCode,ref redTree); 
             return redCode;
         }
       
         public Dictionary<byte, string> getBlueCode()
         {
-              foreach (var item in blueFrequencies) 
+            for (int i = 0; i < 256;i++)
             {
-                node newNode = new node(item.Key, item.Value); 
-                blueHeap.add(newNode);
+                if (blueFrequencies[i] != 0)
+                {
+                    node newNode = new node((byte)i, blueFrequencies[i]);
+                    blueHeap.add(newNode);
+                }
             }
             buildTree(ref blueHeap);
-            getBinaryCode(blueHeap.getRoot(), "", ref blueCode); 
+            getBinaryCode(blueHeap.getRoot(), "", ref blueCode,ref blueTree); 
             return blueCode;
         }
  
         public Dictionary<byte, string> getGreenCode()
         {
-              foreach (var item in greenFrequencies)  
+            for (int i = 0; i < 256;i++)
             {
-                node newNode = new node(item.Key, item.Value);
-                greenHeap.add(newNode);
+                if (greenFrequencies[i] != 0)
+                {
+                    node newNode = new node((byte)i, greenFrequencies[i]);
+                    greenHeap.add(newNode);
+                }
             }
             buildTree(ref greenHeap);  
-            getBinaryCode(greenHeap.getRoot(), "", ref greenCode);   
+            getBinaryCode(greenHeap.getRoot(), "", ref greenCode,ref greenTree);   
              return greenCode;
         }
-        public void writeToFile(string path, ref RGBPixel[,] arr)
+        public void writeHeader(string path, ref RGBPixel[,] arr,int seed,int tap)
         {
-            string s = string.Format("red:{0}", Environment.NewLine);
+            
+             int width = arr.GetLength(1);
+             int height = arr.GetLength(0);
+            
+            int redPad = 8 - redTree.Length % 8;
+            if (redPad != 8)
+                redTree = redTree.PadLeft(redPad + redTree.Length, '0');
+            int redBytesCount = redTree.Length / 8;
+            byte[] redBytes = new byte[redBytesCount];
+            for (int i = 0; i < redBytesCount; i++)
+            {
+                redBytes[i] = Convert.ToByte(redTree.Substring(i * 8, 8), 2);
+            }
+
+            int bluePad = 8 - blueTree.Length % 8;
+            if (bluePad != 8)
+                blueTree = blueTree.PadLeft(bluePad + blueTree.Length, '0');
+            int blueBytesCount = blueTree.Length / 8;
+            byte[] blueBytes = new byte[blueBytesCount];
+            for (int i = 0; i < blueBytesCount; i++)
+            {
+                blueBytes[i] = Convert.ToByte(blueTree.Substring(i * 8, 8), 2);
+            }
+
+            int greenPad = 8 - greenTree.Length % 8;
+            if (greenPad != 8)
+                greenTree = greenTree.PadLeft(greenPad + greenTree.Length, '0');
+            int greenBytesCount = greenTree.Length / 8;
+            byte[] greenBytes = new byte[greenBytesCount];
+            for (int i = 0; i < greenBytesCount; i++)
+            {
+                greenBytes[i] = Convert.ToByte(greenTree.Substring(i * 8, 8), 2);
+            }
+
+            Stream stream = new FileStream(path, FileMode.Create);
+            BinaryWriter bw = new BinaryWriter(stream);
+            bw.Write(height);
+            bw.Write(width);
+            bw.Write(seed);
+            bw.Write(tap);
+          
+            bw.Write(Convert.ToInt16(redBytesCount));
+            bw.Write(Convert.ToByte(redPad));
+            foreach (var item in redBytes)
+            {
+                bw.Write(item);
+            }
+
+            bw.Write(Convert.ToInt16(greenBytesCount));
+            bw.Write(Convert.ToByte(greenPad));
+            foreach (var item in greenBytes)
+            {
+                bw.Write(item);
+            }
+
+            bw.Write(Convert.ToInt16(blueBytesCount));
+            bw.Write(Convert.ToByte(bluePad));
+            foreach (var item in blueBytes)
+            {
+                bw.Write(item);
+            }
+
+            bw.Flush();
+            bw.Close();
+            /* string s = string.Format("red:{0}", Environment.NewLine);
             double original = ((arr.GetLength(0) * arr.GetLength(1)) * 3);
             int compressed = 0;
             foreach (var item in redCode)
@@ -146,7 +215,7 @@ namespace ImageQuantization
             original = (compressed / original) * 100;
             s += string.Format("total bytes: {0}{1}", compressed, Environment.NewLine);
             s += string.Format("compression ratio: {0}% {1}", original, Environment.NewLine);
-            System.IO.File.WriteAllText(path, s);
+            System.IO.File.WriteAllText(path, s);*/
         }
     }
     public class node
