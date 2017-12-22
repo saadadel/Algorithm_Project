@@ -34,7 +34,14 @@ namespace ImageQuantization
 
         private void btnGaussSmooth_Click(object sender, EventArgs e)
         {
-            string initialsed = initialseed.Text;
+            string initialsed;
+            if (alphatext.Text == "")
+                initialsed = initialseed.Text;
+            else
+            {
+                initialsed = alphatext.Text;
+                initialsed = ImageOperations.convertAlphaToBinary(initialsed);
+            }
             int pos = int.Parse(tapText.Text);
             //int x = Convert.ToInt32(initialsed, 2);
             int len = initialsed.Length;

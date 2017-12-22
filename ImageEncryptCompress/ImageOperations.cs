@@ -333,6 +333,18 @@ namespace ImageQuantization
 
             return filter;
         }
+
+
+
+        public static string convertAlphaToBinary(string pass)
+        {
+            string binseed = "";
+            foreach(char c in pass.ToCharArray())
+            {
+                binseed += Convert.ToString(c, 2).PadLeft(8, '0');
+            }
+            return binseed;
+        }
         public static void saveinbinaryfile(Dictionary<byte, string> red, Dictionary<byte, string> green, Dictionary<byte, string> blue, RGBPixel[,] ImageMatrix,string path)
         {
 

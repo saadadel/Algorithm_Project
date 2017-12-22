@@ -54,6 +54,8 @@ namespace ImageQuantization
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.button4 = new System.Windows.Forms.Button();
             this.textBox2 = new System.Windows.Forms.TextBox();
+            this.alphatext = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.panel1.SuspendLayout();
@@ -308,12 +310,30 @@ namespace ImageQuantization
             this.textBox2.Size = new System.Drawing.Size(81, 20);
             this.textBox2.TabIndex = 24;
             // 
+            // alphatext
+            // 
+            this.alphatext.Location = new System.Drawing.Point(897, 463);
+            this.alphatext.Name = "alphatext";
+            this.alphatext.Size = new System.Drawing.Size(88, 20);
+            this.alphatext.TabIndex = 25;
+            // 
+            // label7
+            // 
+            this.label7.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.Location = new System.Drawing.Point(894, 419);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(105, 41);
+            this.label7.TabIndex = 26;
+            this.label7.Text = "Alphanumeric Password";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.ClientSize = new System.Drawing.Size(904, 500);
+            this.ClientSize = new System.Drawing.Size(997, 525);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.alphatext);
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.textBox1);
@@ -374,6 +394,8 @@ namespace ImageQuantization
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox alphatext;
+        private System.Windows.Forms.Label label7;
     }
 }
 
