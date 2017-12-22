@@ -36,9 +36,9 @@ namespace ImageQuantization
         {
             string initialsed = initialseed.Text;
             int pos = int.Parse(tapText.Text);
-            int x = Convert.ToInt32(initialsed, 2);
+            //int x = Convert.ToInt32(initialsed, 2);
             int len = initialsed.Length;
-            ImageMatrix = ImageOperations.incrept(ImageMatrix, ref x, len, pos);
+            ImageMatrix = ImageOperations.incrept(ImageMatrix, ref initialsed, len, pos);
             ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
         }
         private void button1_Click(object sender, EventArgs e)
