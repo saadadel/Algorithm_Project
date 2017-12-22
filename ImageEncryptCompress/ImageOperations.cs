@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Diagnostics;
 ///Algorithms Project
 ///Intelligent Scissors
 ///
@@ -298,6 +299,8 @@ namespace ImageQuantization
         }
         public static RGBPixel[,] incrept(RGBPixel[,] ImageMatrix, ref string initialseed, int len, int pos)
         {
+            Stopwatch stp = new Stopwatch();
+            stp.Start();
             int xor = 0;
             int Height = GetHeight(ImageMatrix);
             int Width = GetWidth(ImageMatrix);
@@ -319,6 +322,15 @@ namespace ImageQuantization
                     filter[i, j].blue = (byte)(ImageMatrix[i, j].blue ^ xor);
                 }
             }
+
+            stp.Stop();
+            TimeSpan ts = stp.Elapsed;
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            ts.Hours, ts.Minutes, ts.Seconds,
+            ts.Milliseconds / 10);
+            MessageBox.Show("Encryption runtime " + elapsedTime);
+
+
             return filter;
         }
         public static void saveinbinaryfile(Dictionary<byte, string> red, Dictionary<byte, string> green, Dictionary<byte, string> blue, RGBPixel[,] ImageMatrix,string path)
