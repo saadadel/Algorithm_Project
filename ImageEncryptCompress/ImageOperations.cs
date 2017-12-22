@@ -244,7 +244,7 @@ namespace ImageQuantization
 
             return Filtered;
         }
-        public static int shift(ref int initialseed, int len, int pos)
+       /* public static int shift(ref int initialseed, int len, int pos)
         {
             int start, sec, end, l;
             int[] xor = new int[8];
@@ -276,8 +276,27 @@ namespace ImageQuantization
             return sum;
 
 
+        }*/
+
+
+        public static byte NewWorkingShift(ref string seed, int tap)
+        {
+            int length = seed.Length;
+            string newSeed = "";
+            for (int i = 1; i < length; i++)
+                newSeed += seed[i];
+
+            newSeed += Convert.ToInt32(seed[0] - 48) ^ Convert.ToInt32(seed[tap - 1] - 48);
+            byte seed8bits;
+            if (length >= 8)
+                seed8bits = Convert.ToByte(newSeed.Substring(length - 8, 8), 2);
+            else
+                seed8bits = Convert.ToByte(newSeed, 2);
+            seed = newSeed;
+            return seed8bits;
+
         }
-        public static RGBPixel[,] incrept(RGBPixel[,] ImageMatrix, ref int initialseed, int len, int pos)
+        public static RGBPixel[,] incrept(RGBPixel[,] ImageMatrix, ref string initialseed, int len, int pos)
         {
             int xor = 0;
             int Height = GetHeight(ImageMatrix);
@@ -289,13 +308,14 @@ namespace ImageQuantization
             {
                 for (int j = 0; j < Width; j++)
                 {
-                    xor = shift(ref initialseed, len, pos);
+                    xor = NewWorkingShift(ref initialseed, pos);
                     filter[i, j].red = (byte)(ImageMatrix[i, j].red ^ xor);
 
-                    xor = shift(ref initialseed, len, pos);
+
+                    xor = NewWorkingShift(ref initialseed, pos);
                     filter[i, j].green = (byte)(ImageMatrix[i, j].green ^ xor);
 
-                    xor = shift(ref initialseed, len, pos);
+                    xor = NewWorkingShift(ref initialseed, pos);
                     filter[i, j].blue = (byte)(ImageMatrix[i, j].blue ^ xor);
                 }
             }
