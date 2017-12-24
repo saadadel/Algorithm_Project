@@ -279,21 +279,24 @@ namespace ImageQuantization
 
         }*/
 
-
+            // return a byte (8-bits) form last 8-bits of shifted seed
         public static byte NewWorkingShift(ref string seed, int tap)
         {
             int length = seed.Length;
-            string newSeed = "";
-            for (int i = 1; i < length; i++)
+            string newSeed = ""; // 8-bit shifted seed
+            for (int i = length - 7; i < length; i++) // copy last 7-bit from intialseed (except the last one)
                 newSeed += seed[i];
 
-            newSeed += Convert.ToInt32(seed[0] - 48) ^ Convert.ToInt32(seed[tap - 1] - 48);
+            newSeed += Convert.ToInt32(seed[0] - 48) ^ Convert.ToInt32(seed[tap - 1] - 48); //last bit
+            // convert to byte
             byte seed8bits;
-            if (length >= 8)
-                seed8bits = Convert.ToByte(newSeed.Substring(length - 8, 8), 2);
-            else
-                seed8bits = Convert.ToByte(newSeed, 2);
-            seed = newSeed;
+            seed8bits = Convert.ToByte(newSeed, 2);
+            // change(after shifting) intial seed 
+            StringBuilder strUpdateTap = new StringBuilder();
+            strUpdateTap.Insert(0, seed.Substring(0, length - 8));
+            strUpdateTap.Append(newSeed);
+            strUpdateTap[tap - 1] = strUpdateTap[tap];
+            seed = strUpdateTap.ToString();
             return seed8bits;
 
         }
